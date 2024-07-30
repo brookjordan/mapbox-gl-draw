@@ -5,6 +5,7 @@ const outputFile = minified ? 'dist/mapbox-gl-draw.js' : 'dist/mapbox-gl-draw-un
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import terser from '@rollup/plugin-terser';
+import typescript from '@rollup/plugin-typescript';
 
 export default {
   input: ['index.js'],
@@ -17,6 +18,7 @@ export default {
   },
   treeshake: true,
   plugins: [
+    typescript(),
     minified ? terser({
       ecma: 2020,
       module: true,

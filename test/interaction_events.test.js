@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spy } from 'sinon';
-import MapboxDraw from '../index.js';
+import MapboxDraw from '../index.ts';
 import click from './utils/mouse_click.js';
 import createMap from './utils/create_map.js';
 import { setupAfterNextRender } from './utils/after_next_render.js';

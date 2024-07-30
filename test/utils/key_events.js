@@ -1,7 +1,9 @@
 import createSyntheticEvent from 'synthetic-dom-events';
-import * as Constants from '../../src/constants.js';
+import {
+  classes
+} from "../../src/constants.ts";
 
-const classList = [Constants.classes.CANVAS];
+const classList = [classes.CANVAS];
 classList.contains = function(cls) {
   return classList.indexOf(cls) >= 0;
 };

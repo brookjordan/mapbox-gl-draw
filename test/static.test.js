@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import StaticMode from '@mapbox/mapbox-gl-draw-static-mode';
 import {spy} from 'sinon';
 
-import MapboxDraw from '../index.js';
+import MapboxDraw from '../index.ts';
 import {setupAfterNextRender} from './utils/after_next_render.js';
 import makeMouseEvent from './utils/make_mouse_event.js';
 import getGeoJSON from './utils/get_geojson.js';
