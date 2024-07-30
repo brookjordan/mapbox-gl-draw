@@ -2,7 +2,7 @@
     "compilerOptions": {
         "module": "esnext",
         "target": "ESNext",
-        "noImplicitAny": false,
+        "noImplicitAny": true,
         "sourceMap": false,
         "moduleResolution": "Bundler"
     }

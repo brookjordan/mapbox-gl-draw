@@ -1,5 +1,5 @@
 import { Layer } from "mapbox-gl";
-import { modes as modeConstants, sources, types } from "./constants";
+import { DrawMode, modes as modeConstants, sources, types } from "./constants";
 
 import styles from "./lib/theme";
 import modes from "./modes/index";
@@ -12,20 +12,18 @@ export type Control =
   | typeof types.POLYGON
   | typeof types.POINT;
 
-export type DrawMode = (typeof modeConstants)[keyof typeof modeConstants];
-
 export interface Options {
-  defaultMode: DrawMode;
-  keybindings: boolean;
-  touchEnabled: boolean;
-  clickBuffer: number;
-  touchBuffer: number;
-  boxSelect: boolean;
-  displayControlsDefault: boolean;
-  styles: Layer[];
-  modes: typeof modes;
-  controls: any;
-  userProperties: boolean;
+  defaultMode?: DrawMode;
+  keybindings?: boolean;
+  touchEnabled?: boolean;
+  clickBuffer?: number;
+  touchBuffer?: number;
+  boxSelect?: boolean;
+  displayControlsDefault?: boolean;
+  styles?: Layer[];
+  modes?: typeof modes;
+  controls?: any;
+  userProperties?: boolean;
 }
 const defaultOptions: Options = {
   defaultMode: modeConstants.SIMPLE_SELECT,
@@ -59,7 +57,7 @@ const hideControls = {
   uncombine_features: false,
 };
 
-function addSources(styles, sourceBucket) {
+function addSources(styles: Layer[], sourceBucket: "hot" | "cold") {
   return styles.map((style) => {
     if (style.source) return style;
     return Object.assign({}, style, {

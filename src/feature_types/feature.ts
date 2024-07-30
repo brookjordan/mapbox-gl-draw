@@ -1,5 +1,13 @@
 import hat from "hat";
-import { activeStates, geojsonTypes, meta } from "../constants";
+import { activeStates, DrawMode, geojsonTypes, meta } from "../constants";
+import Store from "../store";
+import { Options } from "../options";
+import {
+  Feature as GeoJSONFeature,
+  Point as GeoJSONPoint,
+  LineString as GeoJSONLineString,
+  Polygon as GeoJSONPolygon,
+} from "geojson";
 
 class Feature {
   ctx;
@@ -14,11 +22,11 @@ class Feature {
     this.ctx.store.featureChanged(this.id);
   }
 
-  incomingCoords(coords) {
+  incomingCoords(coords: number[] | number[][] | number[][][]) {
     this.setCoordinates(coords);
   }
 
-  setCoordinates(coords) {
+  setCoordinates(coords: number[] | number[][] | number[][][]) {
     this.coordinates = coords;
     this.changed();
   }
@@ -27,7 +35,10 @@ class Feature {
     return JSON.parse(JSON.stringify(this.coordinates));
   }
 
-  setProperty(property, value) {
+  setProperty(
+    property: keyof GeoJSONFeature["properties"],
+    value: GeoJSONFeature["properties"][keyof GeoJSONFeature["properties"]]
+  ) {
     this.properties[property] = value;
   }
 
@@ -45,8 +56,8 @@ class Feature {
     );
   }
 
-  internal(mode) {
-    const properties = {
+  internal(mode: DrawMode) {
+    const properties: GeoJSONFeature["properties"] = {
       id: this.id,
       meta: meta.FEATURE,
       "meta:type": this.type,
@@ -70,7 +81,10 @@ class Feature {
     };
   }
 
-  constructor(ctx, geojson) {
+  constructor(
+    ctx: { store: Store; options: Options },
+    geojson: GeoJSONFeature<GeoJSONPoint | GeoJSONLineString | GeoJSONPolygon>
+  ) {
     this.ctx = ctx;
     this.properties = geojson.properties || {};
     this.coordinates = geojson.geometry.coordinates;

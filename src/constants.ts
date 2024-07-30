@@ -58,6 +58,7 @@ export const modes = {
   SIMPLE_SELECT: "simple_select",
   DIRECT_SELECT: "direct_select",
 } as const;
+export type DrawMode = (typeof modes)[keyof typeof modes];
 
 export const events = {
   CREATE: "draw.create",
