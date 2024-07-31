@@ -1,3 +1,5 @@
+import { Feature as GeoJSONFeature, Point as GeoJSONPoint } from "geojson";
+import { Context } from "../api";
 import Feature from "./feature";
 
 class Point extends Feature {
@@ -8,8 +10,10 @@ class Point extends Feature {
     );
   }
 
-  updateCoordinate(pathOrLng, lngOrLat, lat) {
-    if (arguments.length === 3) {
+  updateCoordinate(
+    ...[pathOrLng, lngOrLat, lat]: [string, number, number] | [number, number]
+  ) {
+    if (typeof pathOrLng === "string") {
       this.coordinates = [lngOrLat, lat];
     } else {
       this.coordinates = [pathOrLng, lngOrLat];
@@ -21,7 +25,7 @@ class Point extends Feature {
     return this.getCoordinates();
   }
 
-  constructor(ctx, geojson) {
+  constructor(ctx: Context, geojson: GeoJSONFeature<GeoJSONPoint>) {
     super(ctx, geojson);
   }
 }

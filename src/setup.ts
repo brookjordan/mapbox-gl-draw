@@ -1,11 +1,13 @@
+import { Map } from "mapbox-gl";
+import { Context } from "./api";
 import { geojsonTypes, sources } from "./constants";
 import Events from "./events";
 import Store from "./store";
 import Ui from "./ui";
 
-export default function (ctx) {
-  let controlContainer = null;
-  let mapLoadedInterval = null;
+export default function (ctx: Context) {
+  let controlContainer: HTMLElement | null = null;
+  let mapLoadedInterval: Parameters<typeof clearInterval>[0] = null;
 
   const setup = {
     onRemove() {
@@ -23,8 +25,9 @@ export default function (ctx) {
       ctx.container = null;
       ctx.store = null;
 
-      if (controlContainer && controlContainer.parentNode)
+      if (controlContainer && controlContainer.parentNode) {
         controlContainer.parentNode.removeChild(controlContainer);
+      }
       controlContainer = null;
 
       return this;
@@ -36,7 +39,7 @@ export default function (ctx) {
       ctx.store.storeMapConfig();
       ctx.events.addEventListeners();
     },
-    onAdd(map) {
+    onAdd(map: Map) {
       ctx.map = map;
       ctx.events = new Events(ctx);
       ctx.ui = new Ui(ctx);

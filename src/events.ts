@@ -4,6 +4,7 @@ import {
   cursors,
   modes as modeConstants,
   events as eventConstants,
+  DrawModeName,
 } from "./constants";
 import featuresAt from "./lib/features_at";
 import getFeaturesAndSetCursor from "./lib/get_features_and_set_cursor";
@@ -11,9 +12,11 @@ import isClick from "./lib/is_click";
 import isTap from "./lib/is_tap";
 import ModeHandler from "./lib/mode_handler";
 import objectToMode from "./modes/object_to_mode";
+import { ModeName } from "./modes/mode_interface";
+import { Context } from "./api";
 
-export default class {
-  modes;
+export default class Events<ModeNames extends ModeName = ModeName> {
+  modes: { [ModeName in ModeNames]: ModeHandler[] };
   mouseDownInfo: {
     time?: number;
     point?: Point;
@@ -21,7 +24,7 @@ export default class {
   touchStartInfo = {};
 
   ctx;
-  currentMode = null;
+  currentMode: ModeHandler | null = null;
 
   actionState = {
     trash: false,
@@ -29,7 +32,7 @@ export default class {
     uncombineFeatures: false,
   };
 
-  _currentModeName = null;
+  _currentModeName: string | null = null;
   get currentModeName() {
     return this._currentModeName;
   }
@@ -318,7 +321,7 @@ export default class {
     return this._currentModeName;
   }
 
-  constructor(ctx) {
+  constructor(ctx: Context) {
     this.ctx = ctx;
     this.modes = Object.keys(ctx.options.modes).reduce((m, k) => {
       m[k] = objectToMode(ctx.options.modes[k]);

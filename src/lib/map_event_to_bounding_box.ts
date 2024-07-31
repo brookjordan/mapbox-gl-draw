@@ -1,13 +1,15 @@
+import { MapMouseEvent } from "mapbox-gl";
+
+export type EventParts = Pick<MapMouseEvent, "point">;
+export type BoundingBox = [[number, number], [number, number]];
+
 /**
  * Returns a bounding box representing the event's location.
- *
- * @param {Event} mapEvent - Mapbox GL JS map event, with a point properties.
- * @return {Array<Array<number>>} Bounding box.
  */
-function mapEventToBoundingBox(mapEvent, buffer = 0) {
+function mapEventToBoundingBox(mapEvent: EventParts, buffer = 0): BoundingBox {
   return [
     [mapEvent.point.x - buffer, mapEvent.point.y - buffer],
-    [mapEvent.point.x + buffer, mapEvent.point.y + buffer]
+    [mapEvent.point.x + buffer, mapEvent.point.y + buffer],
   ];
 }
 

@@ -20,6 +20,11 @@ import doubleClickZoom from "../lib/double_click_zoom";
 import moveFeatures from "../lib/move_features";
 import { ModeState } from "./mode_interface";
 
+interface Coordinate {
+  feature_id: string;
+  coord_path: any;
+}
+
 const isVertex = isOfMetaType(meta.VERTEX);
 const isMidpoint = isOfMetaType(meta.MIDPOINT);
 
@@ -84,7 +89,7 @@ export default {
     state.selectedCoordPaths = [about.coord_path];
   },
 
-  pathsToCoordinates(featureId, paths) {
+  pathsToCoordinates(featureId: string, paths): Coordinate {
     return paths.map((coord_path) => ({ feature_id: featureId, coord_path }));
   },
 

@@ -1,16 +1,16 @@
 import runSetup from "./src/setup";
-import setupOptions, { SetupOptions } from "./src/options";
+import setupOptions, { Options, SetupOptions } from "./src/options";
 import API from "./src/api";
 import modes from "./src/modes/index";
 import * as Constants from "./src/constants";
 import * as lib from "./src/lib/index";
 
 interface Context {
-  options;
+  options: Options;
   api: API;
 }
 
-const setupDraw = function (options: SetupOptions, api) {
+const setupDraw = function (options: SetupOptions, api: API) {
   options = setupOptions(options);
 
   const ctx: Context = {

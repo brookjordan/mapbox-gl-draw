@@ -1,7 +1,14 @@
+import { MapMouseEvent } from "mapbox-gl";
 import { meta } from "../constants";
-import mapEventToBoundingBox from "./map_event_to_bounding_box";
+import mapEventToBoundingBox, {
+  BoundingBox,
+  EventParts,
+} from "./map_event_to_bounding_box";
 import sortFeatures from "./sort_features";
 import StringSet from "./string_set";
+import { Context } from "../api";
+import { Feature, Geometry } from "geojson";
+import { Properties } from "../feature_types/feature";
 
 const META_TYPES = [meta.FEATURE, meta.MIDPOINT, meta.VERTEX];
 
@@ -11,15 +18,20 @@ export default {
   touch: featuresAtTouch,
 };
 
-function featuresAtClick(event, bbox, ctx) {
+function featuresAtClick(event: EventParts, bbox: BoundingBox, ctx: Context) {
   return featuresAt(event, bbox, ctx, ctx.options.clickBuffer);
 }
 
-function featuresAtTouch(event, bbox, ctx) {
+function featuresAtTouch(event: EventParts, bbox: BoundingBox, ctx: Context) {
   return featuresAt(event, bbox, ctx, ctx.options.touchBuffer);
 }
 
-function featuresAt(event, bbox, ctx, buffer) {
+function featuresAt(
+  event: EventParts,
+  bbox: BoundingBox,
+  ctx: Context,
+  buffer?: number
+) {
   if (ctx.map === null) return [];
 
   const box = event ? mapEventToBoundingBox(event, buffer) : bbox;
@@ -38,7 +50,7 @@ function featuresAt(event, bbox, ctx, buffer) {
     .filter((feature) => META_TYPES.indexOf(feature.properties.meta) !== -1);
 
   const featureIds = new StringSet();
-  const uniqueFeatures = [];
+  const uniqueFeatures: Feature<Geometry, Properties>[] = [];
   features.forEach((feature) => {
     const featureId = feature.properties.id;
     if (featureIds.has(featureId)) return;

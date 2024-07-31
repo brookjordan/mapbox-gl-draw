@@ -58,6 +58,7 @@
     "@turf/centroid": "^7.0.0",
     "@types/geojson": "^7946.0.14",
     "@types/hat": "^0.0.4",
+    "@types/mapbox__geojson-area": "^0.2.6",
     "eslint": "8.57.0",
     "eslint-config-mourner": "3.0.0",
     "eslint-plugin-import": "^2.28.1",

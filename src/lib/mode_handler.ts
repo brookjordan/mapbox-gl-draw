@@ -1,8 +1,33 @@
-class ModeHandler {
-  mode;
-  DrawContext;
+import { Context } from "../api";
 
-  handlers = {
+type EventName =
+  | "drag"
+  | "click"
+  | "mousemove"
+  | "mousedown"
+  | "mouseup"
+  | "mouseout"
+  | "keydown"
+  | "keyup"
+  | "touchstart"
+  | "touchmove"
+  | "touchend"
+  | "tap";
+
+type Event = any;
+type HandlerSelector = (event: Event) => boolean;
+type HandlerFn = (event: Event) => boolean | undefined;
+
+type EventHander = {
+  selector: HandlerSelector;
+  fn: HandlerFn;
+};
+
+class ModeHandler {
+  mode: ModeHandler;
+  DrawContext: Context;
+
+  handlers: Record<EventName, EventHander[]> = {
     drag: [],
     click: [],
     mousemove: [],
@@ -18,7 +43,7 @@ class ModeHandler {
   };
 
   ctx = {
-    on(event, selector, fn) {
+    on(event: Event, selector: HandlerSelector, fn: HandlerFn) {
       if (this.handlers[event] === undefined) {
         throw new Error(`Invalid event type: ${event}`);
       }
@@ -27,7 +52,7 @@ class ModeHandler {
         fn,
       });
     },
-    render(id) {
+    render(id: string) {
       this.DrawContext.store.featureChanged(id);
     },
   };
@@ -59,13 +84,13 @@ class ModeHandler {
     }
   }
 
-  delegate(eventName, event) {
-    const handles = this.handlers[eventName];
-    let iHandle = handles.length;
+  delegate(eventName: EventName, event: Event) {
+    const handlers = this.handlers[eventName];
+    let iHandle = handlers.length;
     while (iHandle--) {
-      const handle = handles[iHandle];
-      if (handle.selector(event)) {
-        const skipRender = handle.fn.call(this.ctx, event);
+      const handler = handlers[iHandle];
+      if (handler.selector(event)) {
+        const skipRender = handler.fn.call(this.ctx, event);
         if (!skipRender) {
           this.DrawContext.store.render();
         }
@@ -79,55 +104,55 @@ class ModeHandler {
     }
   }
 
-  drag(event) {
+  drag(event: Event) {
     this.delegate("drag", event);
   }
 
-  click(event) {
+  click(event: Event) {
     this.delegate("click", event);
   }
 
-  mousemove(event) {
+  mousemove(event: Event) {
     this.delegate("mousemove", event);
   }
 
-  mousedown(event) {
+  mousedown(event: Event) {
     this.delegate("mousedown", event);
   }
 
-  mouseup(event) {
+  mouseup(event: Event) {
     this.delegate("mouseup", event);
   }
 
-  mouseout(event) {
+  mouseout(event: Event) {
     this.delegate("mouseout", event);
   }
 
-  keydown(event) {
+  keydown(event: Event) {
     this.delegate("keydown", event);
   }
 
-  keyup(event) {
+  keyup(event: Event) {
     this.delegate("keyup", event);
   }
 
-  touchstart(event) {
+  touchstart(event: Event) {
     this.delegate("touchstart", event);
   }
 
-  touchmove(event) {
+  touchmove(event: Event) {
     this.delegate("touchmove", event);
   }
 
-  touchend(event) {
+  touchend(event: Event) {
     this.delegate("touchend", event);
   }
 
-  tap(event) {
+  tap(event: Event) {
     this.delegate("tap", event);
   }
 
-  constructor(mode, DrawContext) {
+  constructor(mode: ModeHandler, DrawContext: Context) {
     this.mode = mode;
     this.DrawContext = DrawContext;
     mode.start.call(this.ctx);

@@ -1,17 +1,35 @@
 import hat from "hat";
-import { activeStates, DrawMode, geojsonTypes, meta } from "../constants";
+import { activeStates, DrawModeName, geojsonTypes, meta } from "../constants";
 import Store from "../store";
 import { Options } from "../options";
 import {
   Feature as GeoJSONFeature,
   Point as GeoJSONPoint,
   LineString as GeoJSONLineString,
+  MultiLineString as GeoJSONMultiLineString,
   Polygon as GeoJSONPolygon,
+  GeoJsonProperties,
 } from "geojson";
+import Polygon from "./polygon";
+import LineString from "./line_string";
+import Point from "./point";
+import MultiFeature from "./multi_feature";
+
+export interface Properties extends GeoJsonProperties {
+  area?: number;
+}
+
+export type AnyFeature = Point | LineString | Polygon | MultiFeature;
+
+type Geometry =
+  | GeoJSONPoint
+  | GeoJSONLineString
+  | GeoJSONMultiLineString
+  | GeoJSONPolygon;
 
 class Feature {
   ctx;
-  properties;
+  properties: Properties;
   coordinates;
   id;
   type;
@@ -35,9 +53,9 @@ class Feature {
     return JSON.parse(JSON.stringify(this.coordinates));
   }
 
-  setProperty(
-    property: keyof GeoJSONFeature["properties"],
-    value: GeoJSONFeature["properties"][keyof GeoJSONFeature["properties"]]
+  setProperty<Property extends keyof Properties>(
+    property: Property,
+    value: Properties[Property]
   ) {
     this.properties[property] = value;
   }
@@ -56,7 +74,7 @@ class Feature {
     );
   }
 
-  internal(mode: DrawMode) {
+  internal(mode: DrawModeName) {
     const properties: GeoJSONFeature["properties"] = {
       id: this.id,
       meta: meta.FEATURE,
@@ -83,7 +101,7 @@ class Feature {
 
   constructor(
     ctx: { store: Store; options: Options },
-    geojson: GeoJSONFeature<GeoJSONPoint | GeoJSONLineString | GeoJSONPolygon>
+    geojson: GeoJSONFeature<Geometry>
   ) {
     this.ctx = ctx;
     this.properties = geojson.properties || {};

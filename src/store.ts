@@ -212,7 +212,7 @@ export default class Store {
    * @param {Object} [options.silent] - If `true`, this invocation will not fire an event.
    * @return {Store} this
    */
-  setSelected(featureIds, options: { silent?: boolean } = {}) {
+  setSelected(featureIds: string[], options: { silent?: boolean } = {}) {
     featureIds = toDenseArray(featureIds);
 
     // Deselect any features not in the new selection

@@ -1,5 +1,10 @@
 import { Layer } from "mapbox-gl";
-import { DrawMode, modes as modeConstants, sources, types } from "./constants";
+import {
+  DrawModeName,
+  modes as modeConstants,
+  sources,
+  types,
+} from "./constants";
 
 import styles from "./lib/theme";
 import modes from "./modes/index";
@@ -13,7 +18,7 @@ export type Control =
   | typeof types.POINT;
 
 export interface Options {
-  defaultMode?: DrawMode;
+  defaultMode?: DrawModeName;
   keybindings?: boolean;
   touchEnabled?: boolean;
   clickBuffer?: number;

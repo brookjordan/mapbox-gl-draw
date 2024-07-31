@@ -1,3 +1,5 @@
+import { DrawModeName } from "./modes";
+
 export interface LngLat {
   lng: number;
   lat: number;
@@ -51,14 +53,13 @@ export const geojsonTypes = {
   MULTI_POLYGON: "MultiPolygon",
 } as const;
 
-export const modes = {
+export const modes: Record<string, DrawModeName> = {
   DRAW_LINE_STRING: "draw_line_string",
   DRAW_POLYGON: "draw_polygon",
   DRAW_POINT: "draw_point",
   SIMPLE_SELECT: "simple_select",
   DIRECT_SELECT: "direct_select",
 } as const;
-export type DrawMode = (typeof modes)[keyof typeof modes];
 
 export const events = {
   CREATE: "draw.create",

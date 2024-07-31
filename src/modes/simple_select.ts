@@ -10,15 +10,28 @@ import {
   cursors,
   events,
   geojsonTypes,
+  LngLat,
   meta,
   modes,
   updateActions,
 } from "../constants";
 
-export default {
-  onSetup: function (opts) {
+interface State {
+  dragMoveLocation: LngLat | null;
+  boxSelectStartLocation: LngLat | null;
+  boxSelectElement: HTMLElement | undefined;
+  boxSelecting: boolean;
+  canBoxSelect: boolean;
+  dragMoving: boolean;
+  canDragMove: boolean;
+  initialDragPanState: boolean;
+  initiallySelectedFeatureIds: string[];
+}
+
+const SimpleSelect = {
+  onSetup(opts: { featureIds?: string[] }) {
     // turn the opts into state.
-    const state = {
+    const state: State = {
       dragMoveLocation: null,
       boxSelectStartLocation: null,
       boxSelectElement: undefined,
@@ -46,14 +59,14 @@ export default {
     return state;
   },
 
-  fireUpdate: function () {
+  fireUpdate() {
     this.map.fire(events.UPDATE, {
       action: updateActions.MOVE,
       features: this.getSelected().map((f) => f.toGeoJSON()),
     });
   },
 
-  fireActionable: function () {
+  fireActionable() {
     const selectedFeatures = this.getSelected();
 
     const multiFeatures = selectedFeatures.filter((feature) =>
@@ -82,7 +95,7 @@ export default {
     });
   },
 
-  getUniqueIds: function (allFeatures) {
+  getUniqueIds(allFeatures) {
     if (!allFeatures.length) return [];
     const ids = allFeatures
       .map((s) => s.properties.id)
@@ -95,7 +108,7 @@ export default {
     return ids.values();
   },
 
-  stopExtendedInteractions: function (state) {
+  stopExtendedInteractions(state) {
     if (state.boxSelectElement) {
       if (state.boxSelectElement.parentNode)
         state.boxSelectElement.parentNode.removeChild(state.boxSelectElement);
@@ -115,11 +128,11 @@ export default {
     state.canDragMove = false;
   },
 
-  onStop: function () {
+  onStop() {
     doubleClickZoom.enable(this);
   },
 
-  onMouseMove: function (state, e) {
+  onMouseMove(state, e) {
     const isFeature = CommonSelectors.isFeature(e);
     if (isFeature && state.dragMoving) this.fireUpdate();
 
@@ -134,7 +147,7 @@ export default {
     return true;
   },
 
-  onMouseOut: function (state) {
+  onMouseOut(state) {
     // As soon as you mouse leaves the canvas, update the feature
     if (state.dragMoving) return this.fireUpdate();
 
@@ -142,7 +155,7 @@ export default {
     return true;
   },
 
-  onTap: function (state, e) {
+  onTap(state, e) {
     // Click (with or without shift) on no feature
     if (CommonSelectors.noTarget(e)) return this.clickAnywhere(state, e); // also tap
     if (CommonSelectors.isOfMetaType(meta.VERTEX)(e))
@@ -150,11 +163,11 @@ export default {
     if (CommonSelectors.isFeature(e)) return this.clickOnFeature(state, e);
   },
 
-  onClick: function (...args) {
+  onClick(...args) {
     this.onTap(...args);
   },
 
-  clickAnywhere: function (state) {
+  clickAnywhere(state) {
     // Clear the re-render selection
     const wasSelected = this.getSelectedIds();
     if (wasSelected.length) {
@@ -165,7 +178,7 @@ export default {
     this.stopExtendedInteractions(state);
   },
 
-  clickOnVertex: function (state, e) {
+  clickOnVertex(state, e) {
     // Enter direct select mode
     this.changeMode(modes.DIRECT_SELECT, {
       featureId: e.featureTarget.properties.parent,
@@ -175,7 +188,7 @@ export default {
     this.updateUIClasses({ mouse: cursors.MOVE });
   },
 
-  startOnActiveFeature: function (state, e) {
+  startOnActiveFeature(state, e) {
     // Stop any already-underway extended interactions
     this.stopExtendedInteractions(state);
 
@@ -190,7 +203,7 @@ export default {
     state.dragMoveLocation = e.lngLat;
   },
 
-  clickOnFeature: function (state, e) {
+  clickOnFeature(state, e) {
     // Stop everything
     doubleClickZoom.disable(this);
     this.stopExtendedInteractions(state);
@@ -237,7 +250,7 @@ export default {
     this.doRender(featureId);
   },
 
-  onMouseDown: function (state, e) {
+  onMouseDown(state, e) {
     state.initialDragPanState = this.map.dragPan.isEnabled();
     if (CommonSelectors.isActiveFeature(e))
       return this.startOnActiveFeature(state, e);
@@ -245,7 +258,7 @@ export default {
       return this.startBoxSelect(state, e);
   },
 
-  startBoxSelect: function (state, e: { originalEvent }) {
+  startBoxSelect(state, e: { originalEvent }) {
     this.stopExtendedInteractions(state);
     this.map.dragPan.disable();
     // Enable box select
@@ -256,18 +269,18 @@ export default {
     state.canBoxSelect = true;
   },
 
-  onTouchStart: function (state, e) {
+  onTouchStart(state, e) {
     if (CommonSelectors.isActiveFeature(e))
       return this.startOnActiveFeature(state, e);
   },
 
-  onDrag: function (state, e) {
+  onDrag(state, e) {
     if (state.canDragMove) return this.dragMove(state, e);
     if (this.drawConfig.boxSelect && state.canBoxSelect)
       return this.whileBoxSelect(state, e);
   },
 
-  whileBoxSelect: function (state, e) {
+  whileBoxSelect(state, e) {
     state.boxSelecting = true;
     this.updateUIClasses({ mouse: cursors.ADD });
 
@@ -294,7 +307,7 @@ export default {
     state.boxSelectElement.style.height = `${maxY - minY}px`;
   },
 
-  dragMove: function (state, e) {
+  dragMove(state, e) {
     // Dragging when drag move is enabled
     state.dragMoving = true;
     e.originalEvent.stopPropagation();
@@ -309,7 +322,7 @@ export default {
     state.dragMoveLocation = e.lngLat;
   },
 
-  onTouchEnd: function (state, e) {
+  onTouchEnd(state, e) {
     // End any extended interactions
     if (state.dragMoving) {
       this.fireUpdate();
@@ -332,11 +345,11 @@ export default {
     this.stopExtendedInteractions(state);
   },
 
-  onMouseUp: function (...args) {
+  onMouseUp(...args) {
     this.onMouseUp(...args);
   },
 
-  toDisplayFeatures: function (state, geojson, display) {
+  toDisplayFeatures(state, geojson, display) {
     geojson.properties.active = this.isSelected(geojson.properties.id)
       ? activeStates.ACTIVE
       : activeStates.INACTIVE;
@@ -345,17 +358,18 @@ export default {
     if (
       geojson.properties.active !== activeStates.ACTIVE ||
       geojson.geometry.type === geojsonTypes.POINT
-    )
+    ) {
       return;
+    }
     createSupplementaryPoints(geojson).forEach(display);
   },
 
-  onTrash: function () {
+  onTrash() {
     this.deleteFeature(this.getSelectedIds());
     this.fireActionable();
   },
 
-  onCombineFeatures: function () {
+  onCombineFeatures() {
     const selectedFeatures = this.getSelected();
 
     if (selectedFeatures.length === 0 || selectedFeatures.length < 2) return;
@@ -403,7 +417,7 @@ export default {
     this.fireActionable();
   },
 
-  onUncombineFeatures: function () {
+  onUncombineFeatures() {
     const selectedFeatures = this.getSelected();
     if (selectedFeatures.length === 0) return;
 
@@ -434,3 +448,5 @@ export default {
     this.fireActionable();
   },
 } as const;
+
+export default SimpleSelect;

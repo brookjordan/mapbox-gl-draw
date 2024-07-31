@@ -1,15 +1,20 @@
 import normalize from "@mapbox/geojson-normalize";
 import isEqual from "fast-deep-equal";
 import hat from "hat";
-import { geojsonTypes, modes } from "./constants";
+import { DrawModeName, geojsonTypes, modes } from "./constants";
 import featuresAt from "./lib/features_at";
 import StringSet from "./lib/string_set";
 import stringSetsAreEqual from "./lib/string_sets_are_equal";
 
 import LineString from "./feature_types/line_string";
 import MultiFeature from "./feature_types/multi_feature";
-import Point from "./feature_types/point";
 import Polygon from "./feature_types/polygon";
+import { Feature, FeatureCollection, GeoJSON } from "geojson";
+import Store from "./store";
+import Events from "./events";
+import { Options } from "./options";
+import { Map, Point } from "mapbox-gl";
+import Ui from "./ui";
 
 const featureTypes = {
   Polygon,
@@ -18,7 +23,7 @@ const featureTypes = {
   MultiPolygon: MultiFeature,
   MultiLineString: MultiFeature,
   MultiPoint: MultiFeature,
-};
+} as const;
 
 type ModeOptions =
   | {
@@ -30,20 +35,29 @@ type ModeOptions =
       featureIds?: never;
     };
 
-export default class {
-  modes;
-  ctx;
+export interface Context {
+  container: HTMLElement;
+  events: Events;
+  store: Store;
+  options: Options;
+  map: Map | null;
+  ui: Ui;
+}
 
-  getFeatureIdsAt = function (point) {
+export default class API {
+  modes;
+  ctx: Context;
+
+  getFeatureIdsAt(point: Point) {
     const features = featuresAt.click({ point }, null, this.ctx);
     return features.map((feature) => feature.properties.id);
-  };
+  }
 
-  getSelectedIds = function () {
+  getSelectedIds() {
     return this.ctx.store.getSelectedIds();
-  };
+  }
 
-  getSelected = function () {
+  getSelected() {
     return {
       type: geojsonTypes.FEATURE_COLLECTION,
       features: this.ctx.store
@@ -51,23 +65,25 @@ export default class {
         .map((id) => this.ctx.store.get(id))
         .map((feature) => feature.toGeoJSON()),
     };
-  };
+  }
 
-  getSelectedPoints = function () {
+  getSelectedPoints() {
     return {
       type: geojsonTypes.FEATURE_COLLECTION,
-      features: this.ctx.store.getSelectedCoordinates().map((coordinate) => ({
-        type: geojsonTypes.FEATURE,
-        properties: {},
-        geometry: {
-          type: geojsonTypes.POINT,
-          coordinates: coordinate.coordinates,
-        },
-      })),
+      features: this.ctx.store.getSelectedCoordinates().map(
+        (coordinate): Feature => ({
+          type: geojsonTypes.FEATURE,
+          properties: {},
+          geometry: {
+            type: geojsonTypes.POINT,
+            coordinates: coordinate.coordinates,
+          },
+        })
+      ),
     };
-  };
+  }
 
-  set = function (featureCollection) {
+  set(featureCollection: FeatureCollection) {
     if (
       featureCollection.type === undefined ||
       featureCollection.type !== geojsonTypes.FEATURE_COLLECTION ||
@@ -87,10 +103,12 @@ export default class {
 
     renderBatch();
     return newIds;
-  };
+  }
 
-  add = function (geojson) {
-    const featureCollection = JSON.parse(JSON.stringify(normalize(geojson)));
+  add(geojson: GeoJSON) {
+    const featureCollection: ReturnType<typeof normalize> = JSON.parse(
+      JSON.stringify(normalize(geojson))
+    );
 
     const ids = featureCollection.features.map((feature) => {
       feature.id = feature.id || hat();
@@ -104,7 +122,8 @@ export default class {
         this.ctx.store.get(feature.id).type !== feature.geometry.type
       ) {
         // If the feature has not yet been created ...
-        const Model = featureTypes[feature.geometry.type];
+        const Model =
+          featureTypes[feature.geometry.type as keyof typeof featureTypes];
         if (Model === undefined) {
           throw new Error(`Invalid geometry type: ${feature.geometry.type}.`);
         }
@@ -119,6 +138,7 @@ export default class {
           this.ctx.store.featureChanged(internalFeature.id);
         }
         if (
+          "coordinates" in feature.geometry &&
           !isEqual(
             internalFeature.getCoordinates(),
             feature.geometry.coordinates
@@ -132,23 +152,23 @@ export default class {
 
     this.ctx.store.render();
     return ids;
-  };
+  }
 
-  get = function (id) {
+  get(id: string) {
     const feature = this.ctx.store.get(id);
     if (feature) {
       return feature.toGeoJSON();
     }
-  };
+  }
 
-  getAll = function () {
+  getAll() {
     return {
       type: geojsonTypes.FEATURE_COLLECTION,
       features: this.ctx.store.getAll().map((feature) => feature.toGeoJSON()),
     };
-  };
+  }
 
-  delete = function (featureIds) {
+  delete(featureIds: string[]) {
     this.ctx.store.delete(featureIds, { silent: true });
     // If we were in direct select mode and our selected feature no longer exists
     // (because it was deleted), we need to get out of that mode.
@@ -164,9 +184,9 @@ export default class {
     }
 
     return this;
-  };
+  }
 
-  deleteAll = function () {
+  deleteAll() {
     this.ctx.store.delete(this.ctx.store.getAllIds(), { silent: true });
     // If we were in direct select mode, now our selected feature no longer exists,
     // so escape that mode.
@@ -179,9 +199,9 @@ export default class {
     }
 
     return this;
-  };
+  }
 
-  changeMode = function (mode, modeOptions: Partial<ModeOptions> = {}) {
+  changeMode(mode: DrawModeName, modeOptions: Partial<ModeOptions> = {}) {
     // Avoid changing modes just to re-select what's already selected
     if (
       mode === modes.SIMPLE_SELECT &&
@@ -211,37 +231,43 @@ export default class {
 
     this.ctx.events.changeMode(mode, modeOptions, { silent: true });
     return this;
-  };
+  }
 
-  getMode = function () {
+  getMode() {
     return this.ctx.events.getMode();
-  };
+  }
 
-  trash = function () {
+  trash() {
     this.ctx.events.trash({ silent: true });
     return this;
-  };
+  }
 
-  combineFeatures = function () {
-    this.ctx.events.combineFeatures({ silent: true });
+  combineFeatures() {
+    this.ctx.events.combineFeatures();
     return this;
-  };
+  }
 
-  uncombineFeatures = function () {
-    this.ctx.events.uncombineFeatures({ silent: true });
+  uncombineFeatures() {
+    this.ctx.events.uncombineFeatures();
     return this;
-  };
+  }
 
-  setFeatureProperty = function (featureId, property, value) {
+  setFeatureProperty(
+    featureId: string,
+    property: string,
+    value: string | number
+  ) {
     this.ctx.store.setFeatureProperty(featureId, property, value);
     return this;
-  };
+  }
 
-  constructor(ctx, api) {
+  constructor(ctx: Context, api: API) {
     this.ctx = ctx;
     this.modes = modes;
 
-    Object.keys(api).forEach((key) => {
+    Object.keys(api).forEach((key: keyof API) => {
+      if (typeof api[key] !== "function") return;
+
       this[key] = api[key].bind(this);
     });
   }

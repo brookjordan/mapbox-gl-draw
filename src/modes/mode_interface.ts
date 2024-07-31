@@ -1,17 +1,38 @@
+import { Feature } from "geojson";
+import { Context } from "../api";
 import { LngLat } from "../constants";
-import LineString from "../feature_types/line_string";
-import MultiFeature from "../feature_types/multi_feature";
-import Point from "../feature_types/point";
-import Polygon from "../feature_types/polygon";
+import { AnyFeature } from "../feature_types/feature";
 import ModeInterfaceAccessors from "./mode_interface_accessors";
+
+export type ModeName =
+  | "onClick"
+  | "onCombineFeature"
+  | "onDrag"
+  | "onKeyDown"
+  | "onKeyUp"
+  | "onMouseDown"
+  | "onMouseMove"
+  | "onMouseOut"
+  | "onMouseUp"
+  | "onSetup"
+  | "onStop"
+  | "onTap"
+  | "onTouchEnd"
+  | "onTouchMove"
+  | "onTouchStart"
+  | "onTrash"
+  | "onUncombineFeature"
+  | "toDisplayFeatures";
+
+export type CoordPaths = string[];
 
 export interface ModeState {
   featureId?: string;
-  feature?: Polygon | LineString | Point | MultiFeature;
+  feature?: AnyFeature;
   dragMoveLocation?: LngLat | null;
   dragMoving?: boolean;
   canDragMove?: boolean;
-  selectedCoordPaths?: string[];
+  selectedCoordPaths?: CoordPaths;
   initialDragPanState?: boolean;
 }
 
@@ -158,7 +179,7 @@ class ModeInterface extends ModeInterfaceAccessors {
    * @param geojson {Object} - a geojson being evaulated. To render, pass to `display`.
    * @param display {Function} - all geojson objects passed to this be rendered onto the map
    */
-  toDisplayFeatures = function <GeoJSON>(
+  toDisplayFeatures = function <GeoJSON extends Feature>(
     state?: ModeState,
     geojson?: GeoJSON,
     display?: (geojson: GeoJSON) => void
@@ -166,7 +187,7 @@ class ModeInterface extends ModeInterfaceAccessors {
     throw new Error("You must overwrite toDisplayFeatures");
   };
 
-  constructor(ctx) {
+  constructor(ctx: Context) {
     super(ctx);
   }
 }
